@@ -1,0 +1,19 @@
+import flixel.FlxG;
+import funkin.modding.module.Module;
+import funkin.ui.debug.DebugMenuSubState;
+import funkin.modding.base.ScriptedMusicBeatState;
+
+class PolyblocksInjection extends Module
+{
+    public function new()
+    {
+        super('polyblocks-debug-injection');
+    }
+
+    override function onSubStateOpenEnd(event:SubStateScriptEvent) {
+        if (Std.isOfType(event.targetState, DebugMenuSubState)) {
+            var state = event.targetState;
+            state.createItem("Polyblocks Editor", ()->FlxG.switchState(ScriptedMusicBeatState.init('PolyblocksEditor')));
+        }
+    }
+}
