@@ -1,0 +1,18 @@
+<vbox>
+    <box style="background-color: #313535;">
+        <tabbar id="tb2" width="1280" >
+            <button text="Project Test"/>
+        </tabbar>
+    </box>
+    <hbox style="padding: none;">
+        <box style="background-color: #313535; padding: 10px;" width="256" height="720">
+            <button styleName="block">
+                <hbox>
+                    <label text="Move strumline #" style="margin-top: 4px;"/>
+                    <number-stepper min="0" max="1" width="50px"/>   
+                </hbox>
+            </button>
+        </box>
+        <button text="<\n<\n<"></button>
+    </hbox>
+</vbox>

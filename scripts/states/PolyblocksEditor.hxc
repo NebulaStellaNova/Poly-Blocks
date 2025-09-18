@@ -61,7 +61,12 @@ import funkin.graphics.FunkinSprite;
 import flixel.FlxCamera;
 import flixel.FlxG;
 
+// -- Shaders -- \\
+import funkin.graphics.shaders.GaussianBlurShader;
+
 class PolyblocksEditor extends MusicBeatState {
+
+    public var blurShader:GaussianBlurShader = new GaussianBlurShader();
 
     public var camHUD:FlxCamera;
 	public var camGame:FlxCamera;
@@ -75,6 +80,11 @@ class PolyblocksEditor extends MusicBeatState {
 
     function new() {
         super('PolyblocksEditor');
+    }
+
+    function create() {
+        super.create();
+        Cursor.show();
 
         camBackground = new FlxCamera();
         camBackground.bgColor = FlxColor.TRANSPARENT;
@@ -92,6 +102,16 @@ class PolyblocksEditor extends MusicBeatState {
         camHUD.bgColor = FlxColor.TRANSPARENT;
         FlxG.cameras.add(camHUD, true);
 
+        var bg = new FunkinSprite(0, 0).loadGraphic(Paths.image('menuDesat'));
+		bg.scrollFactor.set(0, 0);
+		bg.setGraphicSize(FlxG.width, FlxG.height);
+		bg.updateHitbox();
+		bg.screenCenter();
+		// bg.alpha = 0.5;
+		bg.cameras = [camBackground];
+        bg.shader = blurShader;
+		add(bg);
+
         for (i in PolymodHandler.getAllMods()) {
             if (i.title == editorTitle) {
                 // editorFolder = i.id;
@@ -102,18 +122,13 @@ class PolyblocksEditor extends MusicBeatState {
         var style = RuntimeComponentBuilder.build(Paths.ui("polyblocks/styles/main"));
         add(style);
 
-        var bg = new FunkinSprite(0, 0).loadGraphic(Paths.image('menuDesat'));
-		bg.scrollFactor.set(0, 0);
-		bg.setGraphicSize(FlxG.width, FlxG.height);
-		bg.updateHitbox();
-		bg.screenCenter();
-		bg.albpha = 0.5;
-		bg.cameras = [camBackground];
-		add(bg);
-
         menuBar = RuntimeComponentBuilder.build(Paths.ui("polyblocks/menubar"));
         menuBar.findComponent("menuBarTitle").text = editorTitle + " v" + editorVersion;
         add(menuBar);
+        
+        var mainview = RuntimeComponentBuilder.build(Paths.ui("polyblocks/mainview"));
+        mainview.y = menuBar.y + menuBar.height;
+        add(mainview);
 
         var exitToMenuCallback = ()->{
             FlxG.switchState(new MainMenuState());
@@ -121,11 +136,6 @@ class PolyblocksEditor extends MusicBeatState {
         }
 
         menuBar.findComponent("exitToMenu").onClick = exitToMenuCallback;
-    }
-
-    function create() {
-        super.create();
-        Cursor.show();
     }
 
     function update() {
