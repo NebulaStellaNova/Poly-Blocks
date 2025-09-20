@@ -107,9 +107,9 @@ class PolyblocksEditor extends MusicBeatState {
 		bg.setGraphicSize(FlxG.width, FlxG.height);
 		bg.updateHitbox();
 		bg.screenCenter();
-		// bg.alpha = 0.5;
+		bg.alpha = 0.25;
 		bg.cameras = [camBackground];
-        bg.shader = blurShader;
+        // bg.shader = blurShader;
 		add(bg);
 
         for (i in PolymodHandler.getAllMods()) {
