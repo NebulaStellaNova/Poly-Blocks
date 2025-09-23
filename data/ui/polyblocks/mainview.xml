@@ -1,94 +1,159 @@
 <vbox>
     <box style="background-color: #313535;">
-        <tabbar id="tb2" width="1280">
-            <button text="Project Test" />
+        <tabbar id="tb" width="1280">
+            <!-- <button text="Project Test" /> -->
         </tabbar>
     </box>
     <hbox style="padding: none;">
-        <scrollview style="background-color: #313535; padding: 10px;" width="430" height="650">
+        <scrollview style="background-color: #313535; padding: 10px;" width="439" height="650" id="blockList">
             <vbox style="spacing: 10px; margin-top: 7px">
+                <!-- <label text="—— Callbacks ——" /> -->
+                <button styleName="block" id="projectProperties" style="background-color: #014d3b;">
+                    <vbox>
+                        <label text="Project Data"></label>
+                        <box width="100" height="1"
+                            style="background-color: #FFFFFF; opacity: 0.5; margin-top: -2" />
+                    </vbox>
+                </button>
+                <spacer />
+
                 <label text="—— Callbacks ——" />
-                <button styleName="block">
+                <button styleName="block" id="onNew" style="background-color: #40014d;">
+                    <obj id="type" data="callback"/>
+                    <vbox>
+                        <label text="On New"></label>
+                        <box width="100" height="1"
+                            style="background-color: #FFFFFF; opacity: 0.5; margin-top: -2" />
+                    </vbox>
+                </button>
+                <button styleName="block" id="onCreate" style="background-color: #4b4d01;">
+                    <obj id="type" data="callback"/>
                     <vbox>
                         <label text="On Create"></label>
                         <box width="100" height="1"
                             style="background-color: #FFFFFF; opacity: 0.5; margin-top: -2" />
                     </vbox>
                 </button>
-                <button styleName="block">
+                <button styleName="block" id="onUpdate" style="background-color: #4b4d01;">
                     <vbox>
                         <label text="On Update"></label>
                         <box width="100" height="1"
                             style="background-color: #FFFFFF; opacity: 0.5; margin-top: -2" />
                     </vbox>
                 </button>
-                <button styleName="block">
+                <button styleName="block" id="onEventCall" style="background-color: #4b4d01;">
                     <vbox>
                         <label text="On Event Call"></label>
                         <box width="100" height="1"
                             style="background-color: #FFFFFF; opacity: 0.5; margin-top: -2" />
                     </vbox>
                 </button>
+                <button styleName="block" id="onBeatHit" style="background-color: #4b4d01;">
+                    <vbox>
+                        <label text="On Beat Hit"></label>
+                        <box width="100" height="1"
+                            style="background-color: #FFFFFF; opacity: 0.5; margin-top: -2" />
+                    </vbox>
+                </button>
+                <button styleName="block" id="onStepHit" style="background-color: #4b4d01;">
+                    <vbox>
+                        <label text="On Step Hit"></label>
+                        <box width="100" height="1"
+                            style="background-color: #FFFFFF; opacity: 0.5; margin-top: -2" />
+                    </vbox>
+                </button>
+                <button styleName="block" id="onSwitchState" style="background-color: #4b4d01;">
+                    <vbox>
+                        <label text="On State Switch"></label>
+                        <box width="100" height="1"
+                            style="background-color: #FFFFFF; opacity: 0.5; margin-top: -2" />
+                    </vbox>
+                </button>
+                <!-- <spacer />
+                <label text="—— Methods ——" />
+                <button styleName="block" id="super">
+                    <hbox>
+                        <label text="super('" style="margin-top: 5px;" />
+                        <textfield/>
+                        <label text="')" style="margin-top: 5px;" />
+                    </hbox>
+                </button> -->
+
                 <spacer />
                 <label text="—— Functions ——" />
-                <button styleName="block">
+                <button styleName="block" id="screenCenter" style="background-color: #01274d; border-radius: 4px; border-style: solid; border-color: #004487; border-size: 1px;">
+                    <hbox>
+                        <label text="Center Object" style="margin-top: 5px;" />
+                        <textfield width="85" style="background-color: #001b36; border-color: #004487;"/>
+                    </hbox>
+                </button>
+
+                <button styleName="block" id="customLine" style="background-color: #01274d; border-radius: 4px; border-style: solid; border-color: #004487; border-size: 1px;">
+                    <hbox>
+                        <label text="Custom Line of Code:" style="margin-top: 5px;" />
+                        <textfield width="230" style="background-color: #001b36; border-color: #004487;"/>
+                    </hbox>
+                </button>
+
+                <button styleName="block" id="moveStrumline" style="background-color: #01274d; border-radius: 4px; border-style: solid; border-color: #004487; border-size: 1px;">
                     <hbox>
                         <label text="Move" style="margin-top: 5px;" />
-                        <dropdown width="85">
+                        <dropdown width="85" style="background-color: #001b36; border-color: #004487;">
                             <data>
                                 <item text="Player"></item>
                                 <item text="Opponent"></item>
                             </data>
                         </dropdown>
                         <label text="Strumline" style="margin-top: 5px;" />
-                        <dropdown width="85">
+                        <dropdown width="85" style="background-color: #001b36; border-color: #004487;">
                             <data>
                                 <item text="Up"></item>
                                 <item text="Down"></item>
                             </data>
                         </dropdown>
                         <number-stepper id="strumpx" pos="0" step="1" verticalAlign="center"
-                            tooltip="ADD ONE LATER????" />
+                            tooltip="ADD ONE LATER????" style="background-color: #001b36; border-color: #004487;" />
                         <label text="px" style="margin-top: 5px;" />
                     </hbox>
                 </button>
 
-                <button styleName="block">
+                <button styleName="block" id="tweenStrumline" style="background-color: #01274d; border-radius: 4px; border-style: solid; border-color: #004487; border-size: 1px;">
                     <vbox>
                         <hbox>
                             <label text="Tween" style="margin-top: 5px;" />
-                            <dropdown width="85">
+                            <dropdown width="85" style="background-color: #001b36; border-color: #004487;">
                                 <data>
                                     <item text="Player"></item>
                                     <item text="Opponent"></item>
                                 </data>
                             </dropdown>
                             <label text="Strumline" style="margin-top: 5px;" />
-                            <dropdown width="85">
+                            <dropdown width="85" style="background-color: #001b36; border-color: #004487;">
                                 <data>
                                     <item text="Up"></item>
                                     <item text="Down"></item>
                                 </data>
                             </dropdown>
+                            <number-stepper id="strumpx" pos="0" step="1" verticalAlign="center"
+                            tooltip="ADD ONE LATER????" style="background-color: #001b36; border-color: #004487;" />
                             <label text="px" style="margin-top: 5px;" />
                         </hbox>
                         <hbox>
                             <label text="Ease Type:" style="margin-top: 5px;" />
-                            <dropdown width="85">
+                            <dropdown width="85" style="background-color: #001b36; border-color: #004487;">
                                 <data>
                                     <item text="Sine"></item>
                                     <item text="Quad"></item>
                                 </data> 
                             </dropdown>
                             <label text="Direction" style="margin-top: 5px;" />
-                            <dropdown width="85">
+                            <dropdown width="85" style="background-color: #001b36; border-color: #004487;">
                                 <data>
                                     <item text="In"></item>
                                     <item text="Out"></item>
                                     <item text="In Out"></item>
                                 </data>
                             </dropdown>
-                            <label text="px" style="margin-top: 5px;" />
                         </hbox>
                     </vbox>
                 </button>

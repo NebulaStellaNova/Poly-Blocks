@@ -1,0 +1,7 @@
+<button styleName="block" id="{ 'id': 'onCreateBlock', 'type': 'callback', 'callbackName': 'onCreate', 'isSuper': true }" style="background-color: #4b4d01;">
+    <vbox>
+        <label text="On Create"></label>
+        <box width="100" height="1"
+            style="background-color: #FFFFFF; opacity: 0.5; margin-top: -2" />
+    </vbox>
+</button>

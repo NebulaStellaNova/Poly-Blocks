@@ -64,7 +64,20 @@ import flixel.FlxG;
 // -- Shaders -- \\
 import funkin.graphics.shaders.GaussianBlurShader;
 
+import haxe.Json;
+
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+
+import funkin.modding.module.Module;
+
+import StringTools;
+using StringTools;
+
 class PolyblocksEditor extends MusicBeatState {
+
+    public var projectName:String = "Test Project";
+    public var projectType:String = "module";
 
     public var blurShader:GaussianBlurShader = new GaussianBlurShader();
 
@@ -74,9 +87,21 @@ class PolyblocksEditor extends MusicBeatState {
     public var camBackground:FlxCamera;
 
     public var menuBar:MenuBar;
+    public var mainView;
 
     public var editorTitle:String = "Poly Blocks";
     public var editorVersion:String = "???";
+    public var editorFolder:String = "???";
+
+    public var selectedBlock = null;
+    public var callbackList = [];
+    public var blockList = [];
+    public var blocks = [];
+
+    public var blockOffset = {
+        x: 0,
+        y: 0
+    }
 
     function new() {
         super('PolyblocksEditor');
@@ -86,6 +111,21 @@ class PolyblocksEditor extends MusicBeatState {
         super.create();
         Cursor.show();
 
+        for (i in PolymodHandler.getAllMods()) {
+            if (i.title == editorTitle) {
+                editorFolder = i.id;
+            }
+        }
+
+        for (i in FileUtil.readDir("mods/" + editorFolder + "/data/ui/polyblocks/blocks")) {
+            var id = i.replace(".xml", "");
+            blockList.push(id);
+            if (["callback", "properties"].contains(getData(RuntimeComponentBuilder.build(Paths.ui("polyblocks/blocks/" + id))).type))
+                callbackList.push(id);
+        }
+        
+        // trace(blockList);
+
         camBackground = new FlxCamera();
         camBackground.bgColor = FlxColor.TRANSPARENT;
         FlxG.cameras.add(camBackground, false);
@@ -93,14 +133,14 @@ class PolyblocksEditor extends MusicBeatState {
         camGame = new FlxCamera();
         camGame.bgColor = FlxColor.TRANSPARENT;
         FlxG.cameras.add(camGame, false);
+        
+        camHUD = new FlxCamera();
+        camHUD.bgColor = FlxColor.TRANSPARENT;
+        FlxG.cameras.add(camHUD, true);
 
         camInteract = new FlxCamera();
         camInteract.bgColor = FlxColor.TRANSPARENT;
         FlxG.cameras.add(camInteract, false);
-
-        camHUD = new FlxCamera();
-        camHUD.bgColor = FlxColor.TRANSPARENT;
-        FlxG.cameras.add(camHUD, true);
 
         var bg = new FunkinSprite(0, 0).loadGraphic(Paths.image('menuDesat'));
 		bg.scrollFactor.set(0, 0);
@@ -126,8 +166,11 @@ class PolyblocksEditor extends MusicBeatState {
         menuBar.findComponent("menuBarTitle").text = editorTitle + " v" + editorVersion;
         add(menuBar);
         
-        var mainview = RuntimeComponentBuilder.build(Paths.ui("polyblocks/mainview"));
+        mainview = RuntimeComponentBuilder.build(Paths.ui("polyblocks/mainview"));
         mainview.y = menuBar.y + menuBar.height;
+        var tab = new Button();
+        tab.text = projectName;
+        mainview.findComponent("tb").addComponent(tab);
         add(mainview);
 
         var exitToMenuCallback = ()->{
@@ -136,11 +179,332 @@ class PolyblocksEditor extends MusicBeatState {
         }
 
         menuBar.findComponent("exitToMenu").onClick = exitToMenuCallback;
+
+        // trace(new Callback("onCreate"));
     }
 
+    function checkBlock(block, block2, callback)  {
+        if (block.y > block2.y + block2.height - 1 && block.y < block2.y + block2.height + 1 &&
+            block.x == block2.x) {
+            for (i in blocks) {
+                checkBlock(i, block, callback);
+            }
+            callback(block, block2);
+        }
+    }
+
+    function setMemberCameras(item, cameras) {
+        item.cameras = cameras;
+        if (item.scrollFactor != null)
+            item.scrollFactor.set(1, 1);
+        if (item.members != null) {
+            for (member in item.members) {
+                setMemberCameras(member, cameras);
+            }
+        }
+    }
+
+    var updateText = false;
     function update() {
         super.update();        
         get_conductorInUse().update();
+
+        for (i in blockList) {
+            if (FlxG.mouse.overlaps(mainview.findComponent(i)) && FlxG.mouse.justPressed && !mainview.findComponent(i).disabled) {
+                var block = RuntimeComponentBuilder.build(Paths.ui("polyblocks/blocks/" + i));
+                block.x = FlxG.mouse.x - (block.width/2);
+                block.y = FlxG.mouse.y - (block.height/2);
+                block.x += camGame.scroll.x / camGame.zoom;
+                block.y += camGame.scroll.y / camGame.zoom;
+                block.cameras = [camGame];
+                if (block.findComponent("superText") != null) {
+                    block.findComponent("superText").text = block.findComponent("superText").text.replace("${projectName}", projectName);
+                    block.findComponent("superText").text = block.findComponent("superText").text.replace("'", '"');
+                }
+                if (getData(block).id == "projectProperties") {
+                    block.findComponent("name").text = projectName;
+                    block.findComponent("name").onChange = ()->{
+                        for (i in blocks) {
+                            i.findComponent("superText")?.text = i.findComponent("superText")?.text?.replace('"' + projectName + '"', '"' + block.findComponent("name").text + '"');
+                        }
+                        projectName = block.findComponent("name").text;
+                    }
+                    block.findComponent("type").onChange = ()->{
+                        projectType = block.findComponent("type").selectedItem.id;
+                        // trace(block.findComponent("type").selectedItem);
+                        //trace(projectType);
+                    }
+                }
+                selectedBlock = block;
+                blocks.push(block);
+                add(block);
+            }
+        }
+
+        for (i in blocks) {
+            if (FlxG.mouse.overlaps(i, camGame) && FlxG.mouse.justPressed) {
+                selectedBlock = i;
+                // selectedBlock.disabled = true;
+            }
+        }
+
+        if (FlxG.mouse.justReleased && selectedBlock != null) {
+            if (selectedBlock.overlaps(mainview.findComponent("blockList"))) {
+                var b = selectedBlock;
+                FlxTween.tween(selectedBlock.scale, {x: 0, y: 0}, 0.25, {
+                    onComplete: ()->{
+                        remove(b);
+                    },
+                    onStart: ()->{
+                        blocks.remove(b);
+                    }
+                });
+            }
+            for (block in blocks) {
+                checkBlock(block, selectedBlock, (block, b2)->{
+                    if (block.overlaps(mainview.findComponent("blockList"))) {
+                        var b = block;
+                        FlxTween.tween(block.scale, {x: 0, y: 0}, 0.25, {
+                            onComplete: ()->{
+                                remove(b);
+                                updateText = true;
+                            },
+                            onStart: ()->{
+                                blocks.remove(b);
+                                updateText = true;
+                            }
+                        });
+                    }
+                });
+            }
+            
+            for (block in blocks) {
+                block.disabled = false;
+                if (block == selectedBlock) continue;
+                if (selectedBlock.overlaps(block)) {
+                    selectedBlock.x = block.x;
+                    selectedBlock.y = block.y + block.height;
+                }
+            }
+            selectedBlock.disabled = false;
+            
+            selectedBlock = null;
+        }
+        if (selectedBlock != null) {
+            if (getData(selectedBlock).type == "callback") {
+                for (i in blocks) {
+                    if (i == selectedBlock) continue;
+                    var group = [];
+                    checkBlock(i, selectedBlock, (block, b2)->{
+                        block.cameras = [camInteract];
+                        block.x = b2.x + (FlxG.mouse.deltaX / camGame.zoom);
+                        block.y = b2.y + b2.height + (FlxG.mouse.deltaY / camGame.zoom);
+                        group.push(block);
+                    });
+                }
+            }
+            selectedBlock.cameras = [camInteract];
+            selectedBlock.x += FlxG.mouse.deltaX / camGame.zoom;
+            selectedBlock.y += FlxG.mouse.deltaY / camGame.zoom;
+
+            if (FlxG.mouse.deltaX + FlxG.mouse.deltaY != 0) {
+                selectedBlock.disabled = true;
+                for (i in blocks) {
+                    checkBlock(i, selectedBlock, (block, b2)->{
+                        block.disabled = selectedBlock.disabled;
+                    });
+                }
+            }
+        } else {
+            for (block in blocks) {
+                if (!block.overlaps(mainview.findComponent("blockList")))
+                block.cameras = [camGame];
+            }
+            if (FlxG.mouse.pressed && !FlxG.mouse.overlaps(mainview.findComponent("blockList"))) {
+                for (i in blocks) {
+                    if (i.x != null && i.y != null) {
+                        i.x += FlxG.mouse.deltaX / camGame.zoom;
+                        i.y += FlxG.mouse.deltaY / camGame.zoom;
+                    }
+                }
+                blockOffset.x += FlxG.mouse.deltaX / camGame.zoom;
+                blockOffset.y += FlxG.mouse.deltaY / camGame.zoom;
+            }
+            /* for (i in blocks) {
+                i.scale.x -= FlxG.mouse.wheel/100;
+                i.scale.y -= FlxG.mouse.wheel/100;
+                i.x *= (FlxG.mouse.wheel/100) + 1;
+                i.y *= (FlxG.mouse.wheel/100) + 1;
+            }
+            //camGame.zoom += FlxG.mouse.wheel/10; */
+        }
+
+        for (call in callbackList)
+            mainview.findComponent(call).disabled = false;
+
+        for (i in blocks) {
+            i.scrollFactor.set(1, 1);
+
+            for (call in callbackList) {
+                if (getData(i).id.startsWith(call)) {
+                    // trace(call);
+                    mainview.findComponent(call).disabled = true;
+                }
+            }
+        }
+
+        for (block in blocks) {
+            for (member in block.members) {
+                setMemberCameras(members, block.cameras);
+            }
+        }
+
+        camInteract.zoom = camGame.zoom;
+        camInteract.scroll.x = camGame.scroll.x;
+        camInteract.scroll.y = camGame.scroll.y;
+
+        mainview.findComponent("onEventCall").disabled = projectType != "event";
+        mainview.findComponent("onEventCall").alpha = projectType == "event" ? 1 : 0.5;
+
+        // if (FlxG.mouse.justReleased || updateText) {
+            // if (updateText) updateText = false;
+            // For testing
+            
+            trace('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'+getScript());
+        // }
+    }
+
+    function getScript() {
+        // projectType = "module";
+        var imports = [];
+        var addImport = (import)->{
+            if (!imports.contains(import))
+                imports.push("import " + import + ";");
+        }
+        var callbacks = [];
+        var i = 0;
+        for (block in blocks) {
+            if (getData(block).type == "callback") {
+                var callback = new Callback(getData(block).callbackName);
+                callback.isSuper = getData(block).isSuper;
+                if (callback.callbackName == "new") {
+                    callback.lines.insert(0, 'super("' + projectName + '");');
+                }
+                /* if (callback.callbackName == "handleEvent") {
+                    projectType = "event";
+                } */
+                var group = [];
+                for (block2 in blocks) {
+                    checkBlock(block2, block, (block, b2)->{
+                        group.push(block);
+                        if (getData(block).id.toLowerCase().contains("strumline")) {
+                            addImport("funkin.play.PlayState");
+                        }
+                        if (getData(block).id.toLowerCase().contains("tween")) {
+                            addImport("flixel.tweens.FlxTween");
+                            addImport("flixel.tweens.FlxEase");
+                        }
+                    });
+                }
+                var groupFinal = [];
+                for (i in group) {
+                    groupFinal.insert(0, i);
+                }
+                for (i in groupFinal) {
+                    callback.lines.push(processBlockData(i));
+                    // trace("\t" + getData(i).id);
+                }
+                callbacks.push(callback);
+            }
+            i++;
+        }
+        var thing = [];
+        for (i in callbacks) {
+            var str = i.toString();
+            var lines = str.split("\n");
+            thing.push(lines.join("\n\t"));
+        }
+
+        var extension = "";
+        switch (projectType) {
+            case "event":
+                extension = " extends SongEvent";
+                addImport("funkin.play.event.SongEvent");
+            case "module":
+                extension = " extends Module";
+                addImport("funkin.modding.module.Module");
+        }
+
+        return imports.join("\n") + "\n\nclass " + projectName.replace(" ", "") + extension + " {\n\t" + thing.join("\n\n\t") + "\n}";
+    }
+
+    function getData(obj) {
+        var str = obj.id;
+        str = str.replace("'", '"');
+        return Json.parse(str);
+    }
+
+    function processBlockData(obj) {
+        var data = getData(obj);
+        switch (data.id) {
+            case "moveStrumlineBlock":
+                var getDirection = function(dir) {
+                    switch (dir.toLowerCase()) {
+                        case "left":
+                            return "x -=";
+                        case "right":
+                            return "x +=";
+                        case "up":
+                            return "y -=";
+                        case "down":
+                            return "y +=";
+                    }
+                }
+                var strumline = obj.findComponent("target").selectedItem.text;
+                var line = "PlayState.instance." + (strumline == "Player" ? 'playerStrumline' : 'opponentStrumline') + ".";
+                line += "" + getDirection(obj.findComponent("direction").selectedItem.text) + " ";
+                line += obj.findComponent("amount").pos + ";";
+                return line;
+                /* trace("Move '" + obj.findComponent("target").selectedItem.text + "' strumline");
+                trace("In direction '" +  + "'");
+                trace("Amount '" + obj.findComponent("amount").pos + "'"); */
+            case "tweenStrumlineBlock":
+                var line = "FlxTween.tween(PlayState.instance.${strumline}, { ${direction}: PlayState.instance.${strumline}.${direction} ${operator} ${amount} });";
+                var getDirection = function(dir) {
+                    switch (dir.toLowerCase()) {
+                        case "left", "right":
+                            return "x";
+                        case "up", "down":
+                            return "y";
+                    }
+                }
+                var getOperator = function(dir) {
+                    switch (dir.toLowerCase()) {
+                        case "left", "up":
+                            return "-";
+                        case "right", "down":
+                            return "+";
+                    }
+                }
+                var getStrumline = function(type) {
+                    switch (type.toLowerCase()) {
+                        case "player":
+                            return "playerStrumline";
+                        case "opponent":
+                            return "opponentStrumline";
+                    }
+                }
+                line = line.replace("${direction}", getDirection(obj.findComponent("direction").selectedItem.text));
+                line = line.replace("${operator}", getOperator(obj.findComponent("direction").selectedItem.text));
+                line = line.replace("${strumline}", getStrumline(obj.findComponent("strumline").selectedItem.text));
+                line = line.replace("${amount}", obj.findComponent("amount").pos);
+                return line;
+            case "screenCenterBlock":
+                return obj.findComponent("obj").text + ".screenCenter();";
+            case "customLineBlock":
+                return obj.findComponent("obj").text.replace("\\n", "\n\t");
+        }
+        return "";
     }
 
     override function beatHit() {

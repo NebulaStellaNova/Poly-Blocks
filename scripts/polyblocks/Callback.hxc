@@ -1,0 +1,17 @@
+import funkin.modding.module.Module;
+
+class Callback extends Module {
+    public var callbackName:String;
+    public var isSuper:Bool = false;
+    public var lines = [];
+
+    public function new(name:String) {
+        super('Callback');
+        callbackName = name;
+    }
+
+    override public function toString() {
+        return "public function " + callbackName + "(e) {" + (isSuper ? "\n\tsuper." + callbackName + "(e);" : "") + (lines.length > 0 ? "\n" : "") + "\t" + lines.join("\n\t") + "\n}";
+    }
+    
+}
