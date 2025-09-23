@@ -272,6 +272,7 @@ class PolyblocksEditor extends MusicBeatState {
                     add(cloned);
                     blocks.push(cloned);
                 }
+                
             } else if (!FlxG.mouse.overlaps(mainview.findComponent("blockList"))){
                 rightClickMenu = RuntimeComponentBuilder.build(Paths.ui("polyblocks/rightClickMenuSpace"));
                 rightClickMenu.x = FlxG.mouse.x;
