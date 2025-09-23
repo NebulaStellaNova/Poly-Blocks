@@ -44,6 +44,7 @@ import haxe.ui.data.ArrayDataSource;
 import haxe.ui.macros.ComponentMacros;
 
 import funkin.input.Cursor;
+import funkin.input.CursorMode;
 
 import haxe.ui.containers.dialogs.OpenFileDialog;
 
@@ -57,6 +58,7 @@ import flixel.util.FlxColor;
 import funkin.ui.mainmenu.MainMenuState;
 
 import funkin.graphics.FunkinSprite;
+import flixel.util.FlxTimer;
 
 import flixel.FlxCamera;
 import flixel.FlxG;
@@ -68,6 +70,8 @@ import haxe.Json;
 
 import flixel.tweens.FlxTween;
 import flixel.tweens.FlxEase;
+
+import haxe.ui.backend.flixel.CursorHelper;
 
 import funkin.modding.module.Module;
 
@@ -82,6 +86,7 @@ class PolyblocksEditor extends MusicBeatState {
     public var blurShader:GaussianBlurShader = new GaussianBlurShader();
 
     public var camHUD:FlxCamera;
+    public var camMenu:FlxCamera;
 	public var camGame:FlxCamera;
 	public var camInteract:FlxCamera;
     public var camBackground:FlxCamera;
@@ -97,6 +102,8 @@ class PolyblocksEditor extends MusicBeatState {
     public var callbackList = [];
     public var blockList = [];
     public var blocks = [];
+
+    public var viewOffset:Int = 0;
 
     public var blockOffset = {
         x: 0,
@@ -142,6 +149,10 @@ class PolyblocksEditor extends MusicBeatState {
         camInteract.bgColor = FlxColor.TRANSPARENT;
         FlxG.cameras.add(camInteract, false);
 
+        camMenu = new FlxCamera();
+        camMenu.bgColor = FlxColor.TRANSPARENT;
+        FlxG.cameras.add(camMenu, false);
+
         var bg = new FunkinSprite(0, 0).loadGraphic(Paths.image('menuDesat'));
 		bg.scrollFactor.set(0, 0);
 		bg.setGraphicSize(FlxG.width, FlxG.height);
@@ -168,10 +179,22 @@ class PolyblocksEditor extends MusicBeatState {
         
         mainview = RuntimeComponentBuilder.build(Paths.ui("polyblocks/mainview"));
         mainview.y = menuBar.y + menuBar.height;
-        var tab = new Button();
+        mainview.findComponent("hideButton").findComponent("label").text = "<\n<\n<";
+        /* var tab = new Button();
         tab.text = projectName;
-        mainview.findComponent("tb").addComponent(tab);
+        mainview.findComponent("tb").addComponent(tab); */
         add(mainview);
+
+        mainview.findComponent("hideButton").onClick = ()->{
+            //mainview.findComponent("hideButton").flipX = !mainview.findComponent("hideButton").flipX;
+            if (mainview.findComponent("hideButton").findComponent("label").text == "<\n<\n<") {
+                mainview.findComponent("hideButton").findComponent("label").text = ">\n>\n>";
+            } else {
+                mainview.findComponent("hideButton").findComponent("label").text = "<\n<\n<";
+            }
+        }
+
+        trace(FlxG.height - menuBar.height);
 
         var exitToMenuCallback = ()->{
             FlxG.switchState(new MainMenuState());
@@ -204,13 +227,85 @@ class PolyblocksEditor extends MusicBeatState {
         }
     }
 
+    var rightClickMenu;
+    var rightClickBlock;
+
     var updateText = false;
     function update() {
         super.update();        
         get_conductorInUse().update();
 
+        
+        if (FlxG.mouse.justPressedRight) {
+            if (members.contains(rightClickMenu) && rightClickMenu != null)
+                remove(rightClickMenu);
+
+            rightClickBlock = null;
+            for (i in blocks) {
+                if (FlxG.mouse.overlaps(i, camGame)) {
+                    rightClickBlock = i;
+                    trace(i);
+                }
+            }
+
+            if (rightClickBlock != null) {
+                rightClickMenu = RuntimeComponentBuilder.build(Paths.ui("polyblocks/rightClickMenu" + (["callback", "properties"].contains(getData(rightClickBlock).type) ? "Callback" : "")));
+                rightClickMenu.x = FlxG.mouse.x;
+                rightClickMenu.y = FlxG.mouse.y;
+                rightClickMenu.cameras = [camMenu];
+                add(rightClickMenu);
+    
+                rightClickMenu.findComponent("delete").onClick = ()->{
+                    FlxTween.tween(rightClickBlock.scale, {x: 0, y: 0}, 0.25, {
+                        onComplete: ()->{
+                            remove(rightClickBlock);
+                        },
+                        onStart: ()->{
+                            blocks.remove(rightClickBlock);
+                        }
+                    });
+                }
+                
+                rightClickMenu.findComponent("duplicate")?.onClick = ()->{
+                    var cloned = rightClickBlock.cloneComponent();
+                    cloned.x = rightClickBlock.x;
+                    cloned.y = rightClickBlock.y + rightClickBlock.height;
+                    add(cloned);
+                    blocks.push(cloned);
+                }
+            } else if (!FlxG.mouse.overlaps(mainview.findComponent("blockList"))){
+                rightClickMenu = RuntimeComponentBuilder.build(Paths.ui("polyblocks/rightClickMenuSpace"));
+                rightClickMenu.x = FlxG.mouse.x;
+                rightClickMenu.y = FlxG.mouse.y;
+                rightClickMenu.cameras = [camMenu];
+                add(rightClickMenu);
+
+                rightClickMenu.findComponent("clearAll").onClick = ()->{
+                    for (i in blocks) {
+                        FlxTween.tween(i.scale, {x: 0, y: 0}, 0.25, {
+                            onComplete: ()->{
+                                remove(i);
+                            },
+                            onStart: ()->{
+                                blocks.remove(i);
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        if (FlxG.mouse.justReleased) {
+            if (members.contains(rightClickMenu) && rightClickMenu != null)
+                remove(rightClickMenu);
+            rightClickMenu = null;
+        }
+        
+        viewOffset = mainview.findComponent("hideButton").findComponent("label").text == ">\n>\n>" ? -mainview.findComponent("blockList").width : 0;
+        mainview.x = MathUtil.coolLerp(mainview.x, viewOffset, 0.1);
+        mainview.findComponent("hideButton").offset.x = 7;
         for (i in blockList) {
-            if (FlxG.mouse.overlaps(mainview.findComponent(i)) && FlxG.mouse.justPressed && !mainview.findComponent(i).disabled) {
+            if (FlxG.mouse.overlaps(mainview.findComponent(i)) && FlxG.mouse.justPressed && !mainview.findComponent(i).disabled && rightClickMenu == null) {
                 var block = RuntimeComponentBuilder.build(Paths.ui("polyblocks/blocks/" + i));
                 block.x = FlxG.mouse.x - (block.width/2);
                 block.y = FlxG.mouse.y - (block.height/2);
@@ -309,6 +404,7 @@ class PolyblocksEditor extends MusicBeatState {
 
             if (FlxG.mouse.deltaX + FlxG.mouse.deltaY != 0) {
                 selectedBlock.disabled = true;
+                Cursor.set_cursorMode(CursorMode.Grabbing);
                 for (i in blocks) {
                     checkBlock(i, selectedBlock, (block, b2)->{
                         block.disabled = selectedBlock.disabled;
@@ -321,6 +417,7 @@ class PolyblocksEditor extends MusicBeatState {
                 block.cameras = [camGame];
             }
             if (FlxG.mouse.pressed && !FlxG.mouse.overlaps(mainview.findComponent("blockList"))) {
+                Cursor.set_cursorMode(CursorMode.Grabbing);
                 for (i in blocks) {
                     if (i.x != null && i.y != null) {
                         i.x += FlxG.mouse.deltaX / camGame.zoom;
@@ -329,6 +426,8 @@ class PolyblocksEditor extends MusicBeatState {
                 }
                 blockOffset.x += FlxG.mouse.deltaX / camGame.zoom;
                 blockOffset.y += FlxG.mouse.deltaY / camGame.zoom;
+            } else if (Cursor.cursorMode == CursorMode.Grabbing) {
+                Cursor.set_cursorMode(CursorMode.Default);
             }
             /* for (i in blocks) {
                 i.scale.x -= FlxG.mouse.wheel/100;
@@ -338,6 +437,7 @@ class PolyblocksEditor extends MusicBeatState {
             }
             //camGame.zoom += FlxG.mouse.wheel/10; */
         }
+        
 
         for (call in callbackList)
             mainview.findComponent(call).disabled = false;
@@ -364,13 +464,13 @@ class PolyblocksEditor extends MusicBeatState {
         camInteract.scroll.y = camGame.scroll.y;
 
         mainview.findComponent("onEventCall").disabled = projectType != "event";
-        mainview.findComponent("onEventCall").alpha = projectType == "event" ? 1 : 0.5;
+        // mainview.findComponent("onEventCall").alpha = projectType == "event" ? : 0.5;
 
         // if (FlxG.mouse.justReleased || updateText) {
             // if (updateText) updateText = false;
             // For testing
             
-            trace('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'+getScript());
+            // trace('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'+getScript());
         // }
     }
 

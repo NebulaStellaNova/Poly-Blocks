@@ -1,0 +1,5 @@
+<menu text="Normal">
+    <!-- <menuitem id="duplicate" text="Duplicate Block" /> -->
+    <!-- <menuseparator /> -->
+    <menuitem id="delete" text="Delete Block" style="color: indianred" />
+</menu>
