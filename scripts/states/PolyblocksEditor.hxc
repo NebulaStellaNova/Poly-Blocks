@@ -272,7 +272,7 @@ class PolyblocksEditor extends MusicBeatState {
                     add(cloned);
                     blocks.push(cloned);
                 }
-                
+
             } else if (!FlxG.mouse.overlaps(mainview.findComponent("blockList"))){
                 rightClickMenu = RuntimeComponentBuilder.build(Paths.ui("polyblocks/rightClickMenuSpace"));
                 rightClickMenu.x = FlxG.mouse.x;
@@ -304,6 +304,7 @@ class PolyblocksEditor extends MusicBeatState {
         viewOffset = mainview.findComponent("hideButton").findComponent("label").text == ">\n>\n>" ? -mainview.findComponent("blockList").width : 0;
         mainview.x = MathUtil.coolLerp(mainview.x, viewOffset, 0.1);
         mainview.findComponent("hideButton").offset.x = 7;
+        
         for (i in blockList) {
             if (FlxG.mouse.overlaps(mainview.findComponent(i)) && FlxG.mouse.justPressed && !mainview.findComponent(i).disabled && rightClickMenu == null) {
                 var block = RuntimeComponentBuilder.build(Paths.ui("polyblocks/blocks/" + i));
