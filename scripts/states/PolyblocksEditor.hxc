@@ -234,7 +234,6 @@ class PolyblocksEditor extends MusicBeatState {
     function update() {
         super.update();        
         get_conductorInUse().update();
-
         
         if (FlxG.mouse.justPressedRight) {
             if (members.contains(rightClickMenu) && rightClickMenu != null)
