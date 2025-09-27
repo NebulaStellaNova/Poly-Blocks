@@ -157,6 +157,42 @@
                         </hbox>
                     </vbox>
                 </button>
+
+                <button styleName="block" id="tweenObject" style="background-color: #01274d; border-radius: 4px; border-style: solid; border-color: #004487; border-size: 1px;">
+                    <vbox>
+                        <hbox>
+                            <label text="Tween object '" style="margin-top: 5px;" />
+                            <textfield width="85" style="background-color: #001b36; border-color: #004487;"/>
+                            <label text="'" style="margin-top: 5px;" />
+                            <dropdown width="85" style="background-color: #001b36; border-color: #004487;">
+                                <data>
+                                    <item text="Up"></item>
+                                    <item text="Down"></item>
+                                </data>
+                            </dropdown>
+                            <number-stepper id="strumpx" pos="0" step="1" verticalAlign="center"
+                            tooltip="ADD ONE LATER????" style="background-color: #001b36; border-color: #004487;" />
+                            <label text="px" style="margin-top: 5px;" />
+                        </hbox>
+                        <hbox>
+                            <label text="Ease Type:" style="margin-top: 5px;" />
+                            <dropdown width="85" style="background-color: #001b36; border-color: #004487;">
+                                <data>
+                                    <item text="Sine"></item>
+                                    <item text="Quad"></item>
+                                </data> 
+                            </dropdown>
+                            <label text="Direction" style="margin-top: 5px;" />
+                            <dropdown width="85" style="background-color: #001b36; border-color: #004487;">
+                                <data>
+                                    <item text="In"></item>
+                                    <item text="Out"></item>
+                                    <item text="In Out"></item>
+                                </data>
+                            </dropdown>
+                        </hbox>
+                    </vbox>
+                </button>
             </vbox>
         </scrollview>
         <button id="hideButton" style="border-left: none; border-top: none; background-color: #313535;">

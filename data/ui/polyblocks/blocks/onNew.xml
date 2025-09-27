@@ -1,4 +1,12 @@
-<button styleName="block" id="{ 'id': 'onNewBlock', 'type': 'callback', 'callbackName': 'new', 'isSuper': false }" style="background-color: #40014d;">
+<button styleName="block" id="
+{ 
+    'id': 'onNewBlock', 
+    'type': 'callback', 
+    'callbackName': 'new', 
+    'isSuper': false, 
+    'data': [] 
+}
+" style="background-color: #40014d;">
     <vbox>
         <label text="On New"></label>
         <box width="100" height="1"

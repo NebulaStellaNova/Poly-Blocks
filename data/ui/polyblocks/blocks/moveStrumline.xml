@@ -1,4 +1,23 @@
-<box styleName="block" id="{ 'id': 'moveStrumlineBlock', 'type': 'basic' }" style="background-color: #01274d; padding-left: 15px; padding-right: 15px; padding-top: 5px; padding-bottom: 5px; border-radius: 4px; border-style: solid; border-color: #004487; border-size: 1px;">
+<box styleName="block" id="
+{ 
+    'id': 'moveStrumlineBlock', 
+    'type': 'basic', 
+    'data': [
+        {
+            'pointers': ['selectedItem', 'text'],
+            'id': 'target'
+        },
+        {
+            'pointers': ['selectedItem', 'text'],
+            'id': 'direction'
+        },
+        {
+            'pointers': ['pos'],
+            'id': 'amount'
+        }
+    ]  
+}
+" style="background-color: #01274d; padding-left: 15px; padding-right: 15px; padding-top: 5px; padding-bottom: 5px; border-radius: 4px; border-style: solid; border-color: #004487; border-size: 1px;">
     <hbox>
         <label text="Move" style="margin-top: 5px;" />
         <dropdown id="target" width="85" style="background-color: #001b36; border-color: #004487;">

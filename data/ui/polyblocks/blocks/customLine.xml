@@ -1,4 +1,15 @@
-<box styleName="block" id="{ 'id': 'customLineBlock', 'type': 'basic' }" style="background-color: #01274d; padding-left: 15px; padding-right: 15px; padding-top: 5px; padding-bottom: 5px; border-radius: 4px; border-style: solid; border-color: #004487; border-size: 1px;">
+<box styleName="block" id="
+{ 
+    'id': 'customLineBlock', 
+    'type': 'basic', 
+    'data': [
+        {
+            'pointers': ['text'],
+            'id': 'obj'
+        }
+    ] 
+}
+" style="background-color: #01274d; padding-left: 15px; padding-right: 15px; padding-top: 5px; padding-bottom: 5px; border-radius: 4px; border-style: solid; border-color: #004487; border-size: 1px;">
     <hbox>
         <label text="Custom Line of Code:" style="margin-top: 4px;" />
         <textfield id="obj" width="230" style="background-color: #001b36; border-color: #004487;"/>

@@ -60,6 +60,8 @@ import funkin.ui.mainmenu.MainMenuState;
 import funkin.graphics.FunkinSprite;
 import flixel.util.FlxTimer;
 
+import flixel.text.FlxText;
+
 import flixel.FlxCamera;
 import flixel.FlxG;
 
@@ -74,6 +76,8 @@ import flixel.tweens.FlxEase;
 import haxe.ui.backend.flixel.CursorHelper;
 
 import funkin.modding.module.Module;
+
+import Reflect;
 
 import StringTools;
 using StringTools;
@@ -100,6 +104,7 @@ class PolyblocksEditor extends MusicBeatState {
 
     public var selectedBlock = null;
     public var callbackList = [];
+    public var indicators = [];
     public var blockList = [];
     public var blocks = [];
 
@@ -243,7 +248,7 @@ class PolyblocksEditor extends MusicBeatState {
             for (i in blocks) {
                 if (FlxG.mouse.overlaps(i, camGame)) {
                     rightClickBlock = i;
-                    trace(i);
+                    // trace(i);
                 }
             }
 
@@ -304,7 +309,7 @@ class PolyblocksEditor extends MusicBeatState {
         viewOffset = mainview.findComponent("hideButton").findComponent("label").text == ">\n>\n>" ? -mainview.findComponent("blockList").width : 0;
         mainview.x = MathUtil.coolLerp(mainview.x, viewOffset, 0.1);
         mainview.findComponent("hideButton").offset.x = 7;
-        
+
         for (i in blockList) {
             if (FlxG.mouse.overlaps(mainview.findComponent(i)) && FlxG.mouse.justPressed && !mainview.findComponent(i).disabled && rightClickMenu == null) {
                 var block = RuntimeComponentBuilder.build(Paths.ui("polyblocks/blocks/" + i));
@@ -473,6 +478,59 @@ class PolyblocksEditor extends MusicBeatState {
             
             // trace('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'+getScript());
         // }
+        if (FlxG.keys.justPressed.F) {
+            // trace(getProjectJson());
+        }
+
+        if (indicators.length != blocks.length) {
+            var indicator = new FunkinSprite().loadGraphic(Paths.image('blockIndicator')); // was using label but, buggy..
+            // indicator.text = "•";
+            // indicator.fontSize = 50;
+            indicator.cameras = [camInteract];
+            add(indicator);
+            indicator.updateHitbox();
+            indicators.push(indicator);
+        }
+
+        for (i in indicators) {
+            i.visible = false;
+            i.blend = 0;
+        }
+        var index = 0;
+        for (i in blocks) {
+            var indicator = indicators[index];
+            // i.isOnScreen = true;
+            if (indicator == null) continue;
+            indicator.color = mainview.findComponent(getData(i).id.replace("Block", "")).style.backgroundColor;
+            // trace();
+            var offset = [0, 0];
+            indicator.x = i.x + offset[0] + (i.width/2);
+            indicator.y = i.y + offset[1] + (i.height/2);
+            if (indicator.x < mainview.x + mainview.width - 40 + offset[0]) {
+                indicator.x = mainview.x + mainview.width - 40 + offset[0];
+                indicator.visible = true;
+            }
+            if (indicator.y < menuBar.height + offset[1]) {
+                indicator.y = menuBar.height + offset[1];
+                indicator.visible = true;
+            }
+
+            if (indicator.x > FlxG.width - 13 + offset[0]) {
+                indicator.x = FlxG.width - 13 + offset[0];
+                indicator.visible = true;
+            }
+            if (indicator.y > FlxG.height - 13 + offset[1]) {
+                indicator.y = FlxG.height - 13 + offset[1];
+                indicator.visible = true;
+            }
+            index++;
+        }
+        /* for (i in indicators) {
+            if (i.visible == false) {
+                indicators.remove(i);
+                remove(i);
+            }
+        } */
     }
 
     function getScript() {
@@ -540,9 +598,7 @@ class PolyblocksEditor extends MusicBeatState {
     }
 
     function getData(obj) {
-        var str = obj.id;
-        str = str.replace("'", '"');
-        return Json.parse(str);
+        return Json.parse(obj.id.replace("'", '"'));
     }
 
     function processBlockData(obj) {
@@ -606,6 +662,44 @@ class PolyblocksEditor extends MusicBeatState {
                 return obj.findComponent("obj").text.replace("\\n", "\n\t");
         }
         return "";
+    }
+
+    function getProjectJson() {
+        var jsonData = {
+            name: projectName,
+            type: projectType, 
+            blocks: []
+        }
+        for (i in blocks) {
+            // trace(getData(i).id);
+            jsonData.blocks.push(blockToObj(i));
+        }
+        return Json.stringify(jsonData, null, "\t");
+    }
+
+    function blockToObj(block) {
+        var jsonBlock = {
+            id: getData(block).id.replace('Block', ''),
+            position: [
+                block.x,
+                block.y
+            ],
+            values: []
+        }
+        for (prop in getData(block).data) {
+            var data = block.findComponent(prop.id);
+            // trace(Reflect.fields(data).contains('text'), Reflect.getProperty(data, 'text'));
+            for (i in prop.pointers) {
+                data = Reflect.getProperty(data, i) ?? Reflect.field(data, i) ?? data;
+            }
+            jsonBlock.values.push({
+                id: prop.id,
+                pointers: prop.pointers,
+                value: data
+            });
+        }
+        return jsonBlock;
+        //trace(Json.stringify(jsonBlock, null, "\t"));
     }
 
     override function beatHit() {

@@ -1,4 +1,31 @@
-<box styleName="block" id="{ 'id': 'tweenStrumlineBlock', 'type': 'basic' }"  style="background-color: #01274d; padding-left: 15px; padding-right: 15px; padding-top: 5px; padding-bottom: 5px; border-radius: 4px; border-style: solid; border-color: #004487; border-size: 1px;">
+<box styleName="block" id="
+{ 
+    'id': 'tweenStrumlineBlock', 
+    'type': 'basic', 
+    'data': [
+        {
+            'pointers': ['selectedItem', 'text'],
+            'id': 'strumline'
+        },
+        {
+            'pointers': ['selectedItem', 'text'],
+            'id': 'direction'
+        },
+        {
+            'pointers': ['pos'],
+            'id': 'amount'
+        },
+        {
+            'pointers': ['selectedItem', 'text'],
+            'id': 'easeType'
+        },
+        {
+            'pointers': ['selectedItem', 'text'],
+            'id': 'easeDirection'
+        }
+    ]
+}
+"  style="background-color: #01274d; padding-left: 15px; padding-right: 15px; padding-top: 5px; padding-bottom: 5px; border-radius: 4px; border-style: solid; border-color: #004487; border-size: 1px;">
     <vbox>
         <hbox>
             <label text="Tween" style="margin-top: 5px;" />
@@ -23,14 +50,14 @@
         </hbox>
         <hbox>
             <label text="Ease Type:" style="margin-top: 5px;" />
-            <dropdown width="85" style="background-color: #001b36; border-color: #004487;">
+            <dropdown id="easeType" width="85" style="background-color: #001b36; border-color: #004487;">
                 <data>
                     <item text="Sine"></item>
                     <item text="Quad"></item>
                 </data> 
             </dropdown>
             <label text="Direction" style="margin-top: 5px;" />
-            <dropdown width="85" style="background-color: #001b36; border-color: #004487;">
+            <dropdown id="easeDirection" width="85" style="background-color: #001b36; border-color: #004487;">
                 <data>
                     <item text="In"></item>
                     <item text="Out"></item>

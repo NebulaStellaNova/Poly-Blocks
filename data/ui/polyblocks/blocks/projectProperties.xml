@@ -1,4 +1,19 @@
-<box styleName="block" id="{ 'id': 'projectProperties', 'type': 'properties' }" style="background-color: #014d3b; padding-left: 15px; padding-right: 15px; padding-top: 5px; padding-bottom: 5px; border-radius: 4px; border-style: solid; border-color: #016b52; border-size: 1px;">
+<box styleName="block" id="
+{ 
+    'id': 'projectProperties', 
+    'type': 'properties', 
+    'data': [
+        {
+            'pointers': ['text'],
+            'id': 'name'
+        },
+        {
+            'pointers': ['selectedItem', 'id'],
+            'id': 'type'
+        }
+    ] 
+}
+    " style="background-color: #014d3b; padding-left: 15px; padding-right: 15px; padding-top: 5px; padding-bottom: 5px; border-radius: 4px; border-style: solid; border-color: #016b52; border-size: 1px;">
     <vbox>
         <label text="Project Data"></label>
         <box width="100" height="1"
