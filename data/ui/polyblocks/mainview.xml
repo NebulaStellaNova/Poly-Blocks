@@ -6,8 +6,8 @@
     </box> -->
     <hbox style="padding: none;" id="window">
         <scrollview style="background-color: #313535; padding: 10px; border-top: none; border-bottom: none;" width="450" height="684" id="blockList">
-            <vbox style="spacing: 10px; margin-top: 7px">
-                <!-- <label text="—— Callbacks ——" /> -->
+            <!-- <vbox style="spacing: 10px; margin-top: 7px">
+                <! <label text="—— Callbacks ——" /> >
                 <button styleName="block" id="projectProperties" style="background-color: #014d3b;">
                     <vbox>
                         <label text="Project Data"></label>
@@ -69,7 +69,7 @@
                             style="background-color: #FFFFFF; opacity: 0.5; margin-top: -2" />
                     </vbox>
                 </button>
-                <!-- <spacer />
+                <! <spacer />
                 <label text="—— Methods ——" />
                 <button styleName="block" id="super">
                     <hbox>
@@ -77,7 +77,7 @@
                         <textfield/>
                         <label text="')" style="margin-top: 5px;" />
                     </hbox>
-                </button> -->
+                </button> ->
 
                 <spacer />
                 <label text="—— Functions ——" />
@@ -193,7 +193,7 @@
                         </hbox>
                     </vbox>
                 </button>
-            </vbox>
+            </vbox> -->
         </scrollview>
         <button id="hideButton" style="border-left: none; border-top: none; background-color: #313535;">
             <label id="label" text="<\n<\n<"/>

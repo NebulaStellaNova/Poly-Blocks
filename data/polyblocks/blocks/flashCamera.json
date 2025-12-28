@@ -1,0 +1,23 @@
+{
+    "category": "functions",
+    "fields": [
+        {
+            "id": "objectID",
+            "type": "TextField",
+            "placeholder": "Camera ID"
+        },
+        {
+            "id": "axes",
+            "type": "ColorPicker",
+            "placeholder": "Flash Color"
+        },
+        {
+            "id": "duration",
+            "type": "NumberStepper"
+        }
+    ],
+    "blockDisplay": "Flash Camera {objectID}{axes}\nfor{duration}seconds",
+    "code": "// Not implemented",
+    "fieldColor": "#00366D",
+    "backgroundColor": "#004487"
+}

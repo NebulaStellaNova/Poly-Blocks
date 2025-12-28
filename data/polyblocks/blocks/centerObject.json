@@ -1,0 +1,32 @@
+{
+    "category": "functions",
+    "fields": [
+        {
+            "id": "objectID",
+            "type": "TextField",
+            "placeholder": "Object ID"
+        },
+        {
+            "id": "axes",
+            "type": "DropDown",
+            "values": [
+                {
+                    "id": "X",
+                    "text": "Horizontally"
+                }, 
+                {
+                    "id": "Y",
+                    "text": "Vertically"
+                }, 
+                {
+                    "id": "XY",
+                    "text": "Both"
+                }
+            ]
+        }
+    ],
+    "blockDisplay": "Center Object {objectID}{axes}",
+    "code": "{objectID}.screenCenter(FlxAxes.{axes})",
+    "fieldColor": "#00366D",
+    "backgroundColor": "#004487"
+}

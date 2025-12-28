@@ -1,0 +1,8 @@
+{
+    "category": "callbacks",
+    "callbackName": "onUpdate",
+    "type": "callback",
+    "blockDisplay": "On Update",
+    "fieldColor": "#4b4d01",
+    "backgroundColor": "#4b4d01"
+}

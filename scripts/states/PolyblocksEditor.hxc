@@ -14,7 +14,10 @@ import haxe.ui.components.DropDown;
 import haxe.ui.components.TextArea;
 import haxe.ui.components.CheckBox;
 import haxe.ui.components.TextField;
+import haxe.ui.components.ColorPicker;
 import haxe.ui.components.NumberStepper;
+
+import haxe.ui.components.popups.ColorPickerPopup;
 
 import haxe.ui.containers.Box;
 import haxe.ui.containers.HBox;
@@ -77,6 +80,8 @@ import haxe.ui.backend.flixel.CursorHelper;
 
 import funkin.modding.module.Module;
 
+import haxe.ui.Toolkit;
+
 import Reflect;
 
 import StringTools;
@@ -123,18 +128,20 @@ class PolyblocksEditor extends MusicBeatState {
         super.create();
         Cursor.show();
 
+        // Toolkit.styleSheet.parse(".body, .label, .link, .textfield, .textarea { font-name: \"Inconsolata\";  }");
+
         for (i in PolymodHandler.getAllMods()) {
             if (i.title == editorTitle) {
                 editorFolder = i.id;
             }
         }
 
-        for (i in FileUtil.readDir("mods/" + editorFolder + "/data/ui/polyblocks/blocks")) {
+        /* for (i in FileUtil.readDir("mods/" + editorFolder + "/data/ui/polyblocks/blocks")) {
             var id = i.replace(".xml", "");
             blockList.push(id);
             if (["callback", "properties"].contains(getData(RuntimeComponentBuilder.build(Paths.ui("polyblocks/blocks/" + id))).type))
                 callbackList.push(id);
-        }
+        } */
         
         // trace(blockList);
 
@@ -149,7 +156,7 @@ class PolyblocksEditor extends MusicBeatState {
         camHUD = new FlxCamera();
         camHUD.bgColor = FlxColor.TRANSPARENT;
         FlxG.cameras.add(camHUD, true);
-
+        
         camInteract = new FlxCamera();
         camInteract.bgColor = FlxColor.TRANSPARENT;
         FlxG.cameras.add(camInteract, false);
@@ -190,6 +197,151 @@ class PolyblocksEditor extends MusicBeatState {
         mainview.findComponent("tb").addComponent(tab); */
         add(mainview);
 
+        for (i in PolymodHandler.getAllMods()) {
+            if (FileUtil.directoryExists("mods/" + i.id + "/data/polyblocks/categories")) {
+                var categoryJsonList = FileUtil.readDir("mods/" + i.id + "/data/polyblocks/categories");
+                for (category in categoryJsonList) {
+                    var categoryData = Json.parse(FileUtil.readStringFromPath("mods/" + i.id + "/data/polyblocks/categories/" + category));
+                    if (categoryData.display == "") continue;
+                    var categoryComponent = RuntimeComponentBuilder.build(Paths.ui("polyblocks/parts/category"));
+                    categoryComponent.id = category.replace(".json", "");
+                    categoryComponent.findComponent("title").text = categoryData.display;
+                    categoryComponent.findComponent('spacer1').styleString = categoryData.display == "" ? "display: none" : "";
+                    categoryComponent.findComponent('spacer2').styleString = categoryData.display == "" ? "display: none" : "";
+                    categoryComponent.height = categoryData.display == "" ? 0 : categoryComponent.height;
+                    mainview.findComponent("blockList").addComponentAt(categoryComponent, categoryData.order);
+                    trace(categoryData);
+                }
+            }
+        }
+
+        var blockHasField = (blockData, field) -> {
+            blockData.fields ??= [];
+            for (i in blockData.fields) {
+                if (i.id == field.trim()) return true;
+            }
+            return false;
+        }
+        
+        var getBlockField = (blockData, field) -> {
+            blockData.fields ??= [];
+            for (i in blockData.fields) {
+                if (i.id == field.trim()) return i;
+            }
+        }
+
+
+        var fieldHeight = 25;
+
+        for (i in PolymodHandler.getAllMods()) {
+            if (FileUtil.directoryExists("mods/" + i.id + "/data/polyblocks/blocks")) {
+                var blockJsonList = FileUtil.readDir("mods/" + i.id + "/data/polyblocks/blocks");
+                for (block in blockJsonList) {
+                    var jsonString = FileUtil.readStringFromPath("mods/" + i.id + "/data/polyblocks/blocks/" + block);
+                    var blockData = Json.parse(jsonString);
+                    var blockComponent = RuntimeComponentBuilder.build(Paths.ui("polyblocks/parts/block"));
+                    blockComponent.styleString = "background-color: " + blockData.backgroundColor + "; border-color: " + blockData.backgroundColor;
+                    blockComponent.id = block.replace(".json", "");
+                    blockComponent.findComponent("jsonData").text = jsonString;
+                    // blockComponent.draggable = true;
+                    /* blockComponent.onMouseOver = ()->{
+                        trace("yo");
+                        if (FlxG.mouse.justPressed) {
+                            
+                        }
+                    } */
+                    blockComponent.onMouseOver = ()->{
+                        blockComponent.findComponent("isHovered").text = "true";
+                    }
+                    blockComponent.onMouseOut = ()->{
+                        blockComponent.findComponent("isHovered").text = "false";
+                    }
+                    blockList.push(blockComponent.id);
+                    for (segment in blockData.blockDisplay.toString().split("\n")) {
+                        var segmentComponent = new HBox();
+                        blockComponent.findComponent("box").addComponent(segmentComponent);
+                        for (part in splitByTwo(segment, "{", "}")) {
+                            if (!blockHasField(blockData, part)) {
+                                var label = new Label();
+                                label.text = part + "";
+                                label.height = fieldHeight;
+                                label.marginTop = 6;
+                                segmentComponent.addComponent(label);
+                            } else {
+                                var field = getBlockField(blockData, part);
+                                switch (field.type.toLowerCase()) {
+                                    case "numberstepper": 
+                                        var fieldComponent = new NumberStepper();
+                                        fieldComponent.id = field.id;
+                                        fieldComponent.width = 75;
+                                        fieldComponent.height = fieldHeight;
+                                        fieldComponent.styleString = "background-color: " + blockData.fieldColor + "; border-color: " + blockData.backgroundColor;
+                                        fieldComponent.disabled = true;
+                                        fieldComponent.tooltip = field.placeholder != null ? field.placeholder : null;
+                                        segmentComponent.addComponent(fieldComponent);
+
+                                    case "colorpicker": 
+                                        var fieldComponent = new ColorPickerPopup();
+                                        fieldComponent.id = field.id;
+                                        /* fieldComponent.width = 75;
+                                        fieldComponent.height = fieldHeight; */
+                                        fieldComponent.styleString = "background-color: " + blockData.fieldColor + "; border-color: " + blockData.backgroundColor;
+                                        fieldComponent.disabled = true;
+                                        fieldComponent.tooltip = field.placeholder != null ? field.placeholder : null;
+                                        segmentComponent.addComponent(fieldComponent);
+
+                                    case "checkbox": // FUCK the checkbox
+                                        var fieldComponent = new CheckBox();
+                                        fieldComponent.id = field.id;
+                                        fieldComponent.marginTop = 2;
+                                        // numberStepper.width = 75;
+                                        // numberStepper.height = fieldHeight;
+                                        fieldComponent.styleString = "background-color: " + blockData.fieldColor + "; border-color: " + blockData.backgroundColor;
+                                        fieldComponent.disabled = true;
+                                        fieldComponent.tooltip = field.placeholder != null ? field.placeholder : null;
+                                        segmentComponent.addComponent(fieldComponent);
+                                        
+                                    case "textfield":
+                                        var fieldComponent = new TextField();
+                                        fieldComponent.id = field.id;
+                                        fieldComponent.tooltip = field.placeholder != null ? field.placeholder : null;
+                                        fieldComponent.width = 100;
+                                        fieldComponent.height = fieldHeight;
+                                        fieldComponent.styleString = "background-color: " + blockData.fieldColor + "; border-color: " + blockData.backgroundColor;
+                                        fieldComponent.disabled = true;
+                                        segmentComponent.addComponent(fieldComponent);
+
+                                    case "dropdown":
+                                        var fieldComponent = new DropDown();
+                                        fieldComponent.id = field.id;
+                                        fieldComponent.height = fieldHeight;
+                                        fieldComponent.styleString = "background-color: " + blockData.fieldColor + "; border-color: " + blockData.backgroundColor;
+                                        fieldComponent.disabled = true;
+                                        fieldComponent.tooltip = field.placeholder != null ? field.placeholder : null;
+                                        
+                                        var charLength = -1000;
+                                        for (value in field.values) {
+                                            if (value.text.length > charLength) charLength = value.text.length;
+                                        }
+                                        for (value in field.values) {
+                                            while (value.text.length < charLength) {
+                                                value.text += " ";
+                                            }
+                                        }
+                                        for (value in field.values) {
+                                            fieldComponent.dataSource.add(value);
+                                        }
+                                        segmentComponent.addComponent(fieldComponent);
+                                }
+                            }
+                        }
+                    }
+                    mainview.findComponent("blockList").findComponent(blockData.category).addComponent(blockComponent);
+                    trace(blockData);
+                }
+            }
+        }
+
         mainview.findComponent("hideButton").onClick = ()->{
             //mainview.findComponent("hideButton").flipX = !mainview.findComponent("hideButton").flipX;
             if (mainview.findComponent("hideButton").findComponent("label").text == "<\n<\n<") {
@@ -209,6 +361,16 @@ class PolyblocksEditor extends MusicBeatState {
         menuBar.findComponent("exitToMenu").onClick = exitToMenuCallback;
 
         // trace(new Callback("onCreate"));
+    }
+
+    function splitByTwo(what, v1, v2) {
+        var finalArray = [];
+        for (i in what.split(v1)) {
+            for (e in i.split(v2)) {
+                finalArray.push(e);
+            }
+        }
+        return finalArray;
     }
 
     function checkBlock(block, block2, callback)  {
@@ -235,6 +397,8 @@ class PolyblocksEditor extends MusicBeatState {
     var rightClickMenu;
     var rightClickBlock;
 
+    var targetZoom = 1;
+
     var updateText = false;
     function update() {
         super.update();        
@@ -246,7 +410,7 @@ class PolyblocksEditor extends MusicBeatState {
 
             rightClickBlock = null;
             for (i in blocks) {
-                if (FlxG.mouse.overlaps(i, camGame)) {
+                if (i.findComponent('isHovered').text == "true") {
                     rightClickBlock = i;
                     // trace(i);
                 }
@@ -310,9 +474,35 @@ class PolyblocksEditor extends MusicBeatState {
         mainview.x = MathUtil.coolLerp(mainview.x, viewOffset, 0.1);
         mainview.findComponent("hideButton").offset.x = 7;
 
+        /* targetZoom += FlxG.mouse.wheel / 100;
+
+        camGame.zoom = targetZoom; */
+
         for (i in blockList) {
-            if (FlxG.mouse.overlaps(mainview.findComponent(i)) && FlxG.mouse.justPressed && !mainview.findComponent(i).disabled && rightClickMenu == null) {
-                var block = RuntimeComponentBuilder.build(Paths.ui("polyblocks/blocks/" + i));
+            var targetBlock = mainview.findComponent(i);
+            if (targetBlock == null) continue;
+            if (targetBlock.findComponent("isHovered").text == "true" && FlxG.mouse.justPressed && !targetBlock.disabled && rightClickMenu == null) {
+                trace("yc got clicked on");
+                var block = targetBlock.cloneComponent();
+                block.x = FlxG.mouse.x - (block.width/2);
+                block.y = FlxG.mouse.y - (block.height/2);
+                block.x += camGame.scroll.x / camGame.zoom;
+                block.y += camGame.scroll.y / camGame.zoom;
+                block.cameras = [camGame];
+                block.onMouseOver = ()->{
+                    block.findComponent("isHovered").text = "true";
+                }
+                block.onMouseOut = ()->{
+                    block.findComponent("isHovered").text = "false";
+                }
+                for (i in getData(targetBlock).fields ?? []) {
+                    block.findComponent(i.id).disabled = false;
+                }
+                selectedBlock = block;
+                blocks.push(block);
+                add(block);
+            }
+                /* var block = RuntimeComponentBuilder.build(Paths.ui("polyblocks/blocks/" + i));
                 block.x = FlxG.mouse.x - (block.width/2);
                 block.y = FlxG.mouse.y - (block.height/2);
                 block.x += camGame.scroll.x / camGame.zoom;
@@ -338,19 +528,13 @@ class PolyblocksEditor extends MusicBeatState {
                 }
                 selectedBlock = block;
                 blocks.push(block);
-                add(block);
-            }
-        }
-
-        for (i in blocks) {
-            if (FlxG.mouse.overlaps(i, camGame) && FlxG.mouse.justPressed) {
-                selectedBlock = i;
-                // selectedBlock.disabled = true;
-            }
+                add(block); */
+            // }
         }
 
         if (FlxG.mouse.justReleased && selectedBlock != null) {
-            if (selectedBlock.overlaps(mainview.findComponent("blockList"))) {
+            
+            /* if (selectedBlock.overlaps(mainview.findComponent("blockList"))) {
                 var b = selectedBlock;
                 FlxTween.tween(selectedBlock.scale, {x: 0, y: 0}, 0.25, {
                     onComplete: ()->{
@@ -377,16 +561,22 @@ class PolyblocksEditor extends MusicBeatState {
                         });
                     }
                 });
-            }
+            }*/
             
             for (block in blocks) {
                 block.disabled = false;
-                if (block == selectedBlock) continue;
-                if (selectedBlock.overlaps(block)) {
-                    selectedBlock.x = block.x;
+                if (block == selectedBlock || block == null || getData(selectedBlock).type == "callback") continue;
+                if (overlaps(selectedBlock, block) && getData(block).type == "callback") {
+                    selectedBlock.x = block.x+5;
                     selectedBlock.y = block.y + block.height;
+                    // block.height += selectedBlock.height + 5;
+                    // block.width = selectedBlock.width + 10;
+                    selectedBlock.findComponent("parentBlock").text = block.id;
+                    // (selectedBlock);
+                    // remove(selectedBlock, false);
+                    // block.findComponent('subGroup').addComponent(selectedBlock);
                 }
-            }
+            } 
             selectedBlock.disabled = false;
             
             selectedBlock = null;
@@ -419,7 +609,7 @@ class PolyblocksEditor extends MusicBeatState {
             }
         } else {
             for (block in blocks) {
-                if (!block.overlaps(mainview.findComponent("blockList")))
+                // if (!block.overlaps(mainview.findComponent("blockList")))
                 block.cameras = [camGame];
             }
             if (FlxG.mouse.pressed && !FlxG.mouse.overlaps(mainview.findComponent("blockList"))) {
@@ -443,10 +633,51 @@ class PolyblocksEditor extends MusicBeatState {
             }
             //camGame.zoom += FlxG.mouse.wheel/10; */
         }
+
+        var height = [
+            "init" => 0
+        ];
+        var width = [
+            "init" => 0
+        ];
+        for (i in blockList) {
+            if (getData(mainview.findComponent(i)).type == "callback") {
+                mainview.findComponent(i).disabled = false;
+            }
+        }
+        for (i in blocks) {
+            if (i.findComponent("isHovered").text == "true" && FlxG.mouse.justPressed) {
+                selectedBlock = i;
+                // selectedBlock.disabled = true;
+            } else {
+                for (block in blocks) {
+                    if (getData(mainview.findComponent(block.id)).type == "callback") {
+                        mainview.findComponent(block.id).disabled = true;
+                    } else {
+                        block.zIndex = 1000;
+                        refresh();
+                    }
+                    if (block.id == i.findComponent("parentBlock").text) {
+                        if (!height.exists(block.id))
+                            height.set(block.id, 35);
+                        if (!width.exists(block.id))
+                            width.set(block.id, -1000);
+                        i.x = block.x+5;
+                        i.y = block.y + height.get(block.id);
+                        i.disabled = block.disabled;
+                        i.camera = block.camera;
+                        height.set(block.id, height.get(block.id) + i.height + 5);
+                        if (i.width > width.get(block.id)) width.set(block.id, i.width);
+                        block.height = height.get(block.id);
+                        block.width = width.get(block.id) + 10;
+                    }
+                }
+            }
+        }
         
 
-        for (call in callbackList)
-            mainview.findComponent(call).disabled = false;
+        /* for (call in callbackList)
+            mainview.findComponent(call).disabled = false; */
 
         for (i in blocks) {
             i.scrollFactor.set(1, 1);
@@ -469,15 +700,15 @@ class PolyblocksEditor extends MusicBeatState {
         camInteract.scroll.x = camGame.scroll.x;
         camInteract.scroll.y = camGame.scroll.y;
 
-        mainview.findComponent("onEventCall").disabled = projectType != "event";
+        // mainview.findComponent("onEventCall").disabled = projectType != "event";
         // mainview.findComponent("onEventCall").alpha = projectType == "event" ? : 0.5;
 
-        // if (FlxG.mouse.justReleased || updateText) {
+        if (FlxG.mouse.justReleased || updateText) {
             // if (updateText) updateText = false;
             // For testing
             
-            // trace('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'+getScript());
-        // }
+            trace('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'+getScript());
+        }
         if (FlxG.keys.justPressed.F) {
             // trace(getProjectJson());
         }
@@ -501,7 +732,8 @@ class PolyblocksEditor extends MusicBeatState {
             var indicator = indicators[index];
             // i.isOnScreen = true;
             if (indicator == null) continue;
-            indicator.color = mainview.findComponent(getData(i).id.replace("Block", "")).style.backgroundColor;
+            indicator.color = FlxColor.fromString(getData(i).backgroundColor);
+            // indicator.color = mainview.findComponent(getData(i).id.replace("Block", "")).style.backgroundColor;
             // trace();
             var offset = [0, 0];
             indicator.x = i.x + offset[0] + (i.width/2);
@@ -534,6 +766,7 @@ class PolyblocksEditor extends MusicBeatState {
     }
 
     function getScript() {
+        return;
         // projectType = "module";
         var imports = [];
         var addImport = (import)->{
@@ -598,70 +831,21 @@ class PolyblocksEditor extends MusicBeatState {
     }
 
     function getData(obj) {
-        return Json.parse(obj.id.replace("'", '"'));
+        if (obj == null) return {};
+        return Json.parse(obj.findComponent("jsonData").text);
+    }
+
+    function overlaps(obj1, obj2) {
+        return (obj1.x < obj2.x + obj2.width &&
+            obj1.x + obj1.width > obj2.x &&
+            obj1.y < obj2.y + obj2.height &&
+            obj1.y + obj1.height > obj2.y);
     }
 
     function processBlockData(obj) {
+        return;
         var data = getData(obj);
-        switch (data.id) {
-            case "moveStrumlineBlock":
-                var getDirection = function(dir) {
-                    switch (dir.toLowerCase()) {
-                        case "left":
-                            return "x -=";
-                        case "right":
-                            return "x +=";
-                        case "up":
-                            return "y -=";
-                        case "down":
-                            return "y +=";
-                    }
-                }
-                var strumline = obj.findComponent("target").selectedItem.text;
-                var line = "PlayState.instance." + (strumline == "Player" ? 'playerStrumline' : 'opponentStrumline') + ".";
-                line += "" + getDirection(obj.findComponent("direction").selectedItem.text) + " ";
-                line += obj.findComponent("amount").pos + ";";
-                return line;
-                /* trace("Move '" + obj.findComponent("target").selectedItem.text + "' strumline");
-                trace("In direction '" +  + "'");
-                trace("Amount '" + obj.findComponent("amount").pos + "'"); */
-            case "tweenStrumlineBlock":
-                var line = "FlxTween.tween(PlayState.instance.${strumline}, { ${direction}: PlayState.instance.${strumline}.${direction} ${operator} ${amount} });";
-                var getDirection = function(dir) {
-                    switch (dir.toLowerCase()) {
-                        case "left", "right":
-                            return "x";
-                        case "up", "down":
-                            return "y";
-                    }
-                }
-                var getOperator = function(dir) {
-                    switch (dir.toLowerCase()) {
-                        case "left", "up":
-                            return "-";
-                        case "right", "down":
-                            return "+";
-                    }
-                }
-                var getStrumline = function(type) {
-                    switch (type.toLowerCase()) {
-                        case "player":
-                            return "playerStrumline";
-                        case "opponent":
-                            return "opponentStrumline";
-                    }
-                }
-                line = line.replace("${direction}", getDirection(obj.findComponent("direction").selectedItem.text));
-                line = line.replace("${operator}", getOperator(obj.findComponent("direction").selectedItem.text));
-                line = line.replace("${strumline}", getStrumline(obj.findComponent("strumline").selectedItem.text));
-                line = line.replace("${amount}", obj.findComponent("amount").pos);
-                return line;
-            case "screenCenterBlock":
-                return obj.findComponent("obj").text + ".screenCenter();";
-            case "customLineBlock":
-                return obj.findComponent("obj").text.replace("\\n", "\n\t");
-        }
-        return "";
+        return data.code;
     }
 
     function getProjectJson() {
@@ -678,6 +862,7 @@ class PolyblocksEditor extends MusicBeatState {
     }
 
     function blockToObj(block) {
+        return;
         var jsonBlock = {
             id: getData(block).id.replace('Block', ''),
             position: [

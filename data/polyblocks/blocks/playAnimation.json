@@ -1,0 +1,33 @@
+{
+    "category": "functions",
+    "fields": [
+        {
+            "id": "objectID",
+            "type": "TextField",
+            "placeholder": "Object ID"
+        },
+        {
+            "id": "name",
+            "type": "TextField",
+            "placeholder": "Animation Name"
+        },
+        {
+            "id": "force",
+            "type": "DropDown",
+            "values": [
+                {
+                    "id": "false",
+                    "text": "False"
+                },
+                {
+                    "id": "true",
+                    "text": "True"
+                }
+            ]
+        }
+    ],
+    "blockDisplay": "Play Animation {name} on {objectID}\nIs Forced: {force}",
+    "code": "{objectID}.animation.play('{name}', {force})",
+    "fieldColor": "#00366D",
+    "backgroundColor": "#004487"
+}

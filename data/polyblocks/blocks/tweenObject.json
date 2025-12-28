@@ -1,0 +1,116 @@
+{
+    "category": "functions",
+    "fields": [
+        {
+            "id": "objectID",
+            "type": "TextField",
+            "placeholder": "Object ID"
+        },
+        {
+            "id": "direction",
+            "type": "DropDown",
+            "values": [
+                {
+                    "id": "x",
+                    "text": "Horizontally"
+                }, 
+                {
+                    "id": "y",
+                    "text": "Vertically"
+                },
+                {
+                    "id": "alpha",
+                    "text": "Alpha"
+                }
+            ]
+        },
+        {
+            "id": "amount",
+            "type": "NumberStepper"
+        },
+        {
+            "id": "duration",
+            "type": "NumberStepper"
+        },
+        {
+            "id": "ease",
+            "type": "DropDown",
+            "values": [
+                {
+                    "id": "linear",
+                    "text": "Linear"
+                },
+                {
+                    "id": "back",
+                    "text": "Back"
+                },
+                {
+                    "id": "bounce",
+                    "text": "Bounce"
+                },
+                {
+                    "id": "circ",
+                    "text": "Circular"
+                },
+                {
+                    "id": "cube",
+                    "text": "Cubic"
+                },
+                {
+                    "id": "elastic",
+                    "text": "Elastic"
+                },
+                {
+                    "id": "expo",
+                    "text": "Exponential"
+                },
+                {
+                    "id": "quad",
+                    "text": "Quadratic"
+                },
+                {
+                    "id": "quart",
+                    "text": "Quart"
+                },
+                {
+                    "id": "quint",
+                    "text": "Quint"
+                },
+                {
+                    "id": "sine",
+                    "text": "Sine"
+                },
+                {
+                    "id": "smoothStep",
+                    "text": "Smooth"
+                },
+                {
+                    "id": "smootherStep",
+                    "text": "Smoother"
+                }
+            ]
+        },
+        {
+            "id": "easeDirection",
+            "type": "DropDown",
+            "values": [
+                {
+                    "id": "In",
+                    "text": "In"
+                },
+                {
+                    "id": "Out",
+                    "text": "Out"
+                },
+                {
+                    "id": "InOut",
+                    "text": "In + Out"
+                }
+            ]
+        }
+    ],
+    "blockDisplay": "Tween Object{objectID}{direction}\nAmount:{amount}px, For{duration}seconds\nWith Ease{ease}{easeDirection}",
+    "code": "FlxTween.tween({objectID}, { {direction}: {objectID}.{direction} + {amount} }, {duration})",
+    "fieldColor": "#00366D",
+    "backgroundColor": "#004487"
+}

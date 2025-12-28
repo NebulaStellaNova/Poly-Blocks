@@ -1,0 +1,8 @@
+<vbox style="spacing: 10px; margin-top: 7px">
+    <box id="spacerfrfr" height="10"/>
+    <hbox>
+        <spacer id="spacer1" width="20px" style="background-color: #a8a8a8; border-color: #a8a8a8; margin-top: 6px;" height="2px"/>
+        <label id="title" text="Category" style="font-size: 15px;"/>
+        <spacer id="spacer2" width="20px" style="background-color: #a8a8a8; border-color: #a8a8a8; margin-top: 6px;" height="2px"/>
+    </hbox>
+</vbox>

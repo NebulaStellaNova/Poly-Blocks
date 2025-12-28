@@ -1,0 +1,6 @@
+<button styleName="block" id="block" style="background-color: #40014d;">
+    <label id="jsonData" width="0" height="0" text="{}" style="display: none;"/>
+    <label id="parentBlock" width="0" height="0" text="{}" style="display: none;"/>
+    <label id="isHovered" width="0" height="0" style="display: none;"/>
+    <vbox id="box"/>
+</button>

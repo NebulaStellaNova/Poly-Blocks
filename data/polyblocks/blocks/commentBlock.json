@@ -1,0 +1,14 @@
+{
+    "category": "miscellaneous",
+    "fields": [
+        {
+            "id": "comment",
+            "type": "TextField",
+            "placeholder": ""
+        }
+    ],
+    "blockDisplay": "Comment:{comment}",
+    "code": "// {comment}",
+    "fieldColor": "#555555",
+    "backgroundColor": "#464646"
+}
